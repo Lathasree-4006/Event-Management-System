@@ -770,7 +770,7 @@ useEffect(() => {
 
   return (
 
-    <div style={{ height: "100vh", overflow: "hidden", fontFamily: "Arial" }}>
+    <div className="dashboard-shell" style={{ height: "100vh", overflow: "hidden", fontFamily: "Arial" }}>
 
       <header
         style={{
@@ -916,7 +916,7 @@ onClick={()=>setTab("validation")}
       )}
 
 
-      <div
+      <div className="dashboard-content"
         style={{
           position: "absolute",
           top: "60px",
@@ -939,24 +939,24 @@ onClick={()=>setTab("validation")}
             marginBottom: "30px"
           }}
         >
-          <div style={cardStyle}>
+          <div className="organizer-stat-card stat-events" style={cardStyle}>
             <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
             <h4>📅 Events</h4>
             <h1>{dashboardStats.totalEvents}</h1></div>
           </div>
 
-          <div style={cardStyle}>
+          <div className="organizer-stat-card stat-volunteers" style={cardStyle}>
              <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
             <h4>👥 Volunteers</h4>
             <h1>{dashboardStats.totalVolunteers}</h1></div>
           </div>
 
-          <div style={cardStyle}>
+          <div className="organizer-stat-card stat-requests" style={cardStyle}>
              <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
             <h4>📝 Requests</h4>
             <h1>{dashboardStats.totalRequests}</h1></div>
           </div>
-          <div style={cardStyle}>
+          <div className="organizer-stat-card stat-rating" style={cardStyle}>
              <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
           <h4>⭐ Rating</h4>
 <h1>
@@ -966,7 +966,31 @@ onClick={()=>setTab("validation")}
 </div></div>
         </div>
         {tab === "profile" && (
-          <div className="profile-card-Organization">
+          <div className="organizer-form-card profile-card-Organization">
+            <div className="organizer-identity-header">
+              <div className="organizer-avatar-large">
+                {profile.organizationName?.charAt(0).toUpperCase() || profile.name?.charAt(0).toUpperCase() || "O"}
+              </div>
+              <div className="organizer-identity-copy">
+                <span className="eyebrow">Organizer account</span>
+                <h2>{profile.organizationName || "Your Organization"}</h2>
+                <p>{profile.name} · {profile.email}</p>
+                <div className="organizer-identity-badges">
+                  <span>{profile.organizationType || "Community organization"}</span>
+                  {validationStatus === "APPROVED" && <span className="organizer-verified"><MdVerified /> Verified organization</span>}
+                </div>
+              </div>
+              <div className="organizer-identity-stat"><strong>{profile.volunteersManaged || 0}</strong><span>volunteers managed</span></div>
+            </div>
+            <div className="form-heading-row">
+              <div>
+                <span className="eyebrow">Organization profile</span>
+                <h3>Profile Details</h3>
+                <p className="form-helper">Keep your organization and contact information ready for volunteers.</p>
+              </div>
+              <span className="profile-status">{validationStatus || "ACTIVE"}</span>
+            </div>
+            <div className="organizer-profile-section-label">Organization & contact details</div>
             <div className="profile-form-Organization">
               <div className="form-row-Organization">
                 <label>Email:</label>
@@ -1110,7 +1134,14 @@ onClick={()=>setTab("validation")}
           </div>
         )}
         {tab === "createEvent" && (
-          <div className="profile-card-Organization">
+          <div className="organizer-form-card profile-card-Organization">
+            <div className="form-heading-row">
+              <div>
+                <span className="eyebrow">Bring people together</span>
+                <h3>Create an Event</h3>
+                <p className="form-helper">Add the details volunteers need to decide whether this opportunity is right for them.</p>
+              </div>
+            </div>
             <div className="profile-form-Organization">
 
               {/* Event Name */}
@@ -1231,6 +1262,7 @@ onClick={()=>setTab("validation")}
                 return (
                   <div
                     key={event.id}
+                    className={`organizer-event-card ${selectedEvent?.id === event.id ? "is-selected" : ""}`}
                     onClick={() => openEventDetails(event)}
                     style={{
                       position: "relative",
@@ -1304,7 +1336,7 @@ onClick={()=>setTab("validation")}
 
             {/* Selected Event Details */}
             {selectedEvent && (
-              <div
+              <div className="selected-event-panel"
                 style={{
                   marginTop: "20px",
                   background: "#fff",
@@ -1314,7 +1346,7 @@ onClick={()=>setTab("validation")}
                 }}
               >
 
-                <div
+                <div className="selected-event-heading"
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
@@ -1322,7 +1354,7 @@ onClick={()=>setTab("validation")}
                     marginBottom: "10px"
                   }}
                 >
-                  <h3 style={{ margin: 0 }}>
+                  <div className="selected-event-title-wrap"><span className="eyebrow">Event workspace</span><h3 style={{ margin: 0 }}>
                     {isEditingEvent ? (
                       <input
                         value={editableEvent.eventName}
@@ -1336,7 +1368,7 @@ onClick={()=>setTab("validation")}
                     ) : (
                       selectedEvent.eventName
                     )}
-                  </h3>
+                  </h3></div>
 
                   {/* ICON BUTTONS */}
                   <div style={{ display: "flex", gap: "12px" }}>
@@ -1385,8 +1417,15 @@ onClick={()=>setTab("validation")}
 
                 </div>
 
+                <div className="selected-event-meta-grid">
+                  <div><span>Location</span><strong>{selectedEvent.location || "Not specified"}</strong></div>
+                  <div><span>Starts</span><strong>{new Date(selectedEvent.startDateTime).toLocaleString()}</strong></div>
+                  <div><span>Ends</span><strong>{new Date(selectedEvent.endDateTime).toLocaleString()}</strong></div>
+                  <div><span>Volunteer capacity</span><strong>{selectedEvent.volunteersRequired} places</strong></div>
+                </div>
+
                 {/* Location */}
-                <p>
+                <p className="selected-event-description-row">
                   <b>Location:</b>{" "}
                   {isEditingEvent ? (
                     <input
@@ -1400,11 +1439,11 @@ onClick={()=>setTab("validation")}
                   )}
                 </p>
 
-                <p><b>Start:</b> {selectedEvent.startDateTime}</p>
-                <p><b>End:</b> {selectedEvent.endDateTime}</p>
+                <p className="selected-event-legacy-row"><b>Start:</b> {selectedEvent.startDateTime}</p>
+                <p className="selected-event-legacy-row"><b>End:</b> {selectedEvent.endDateTime}</p>
 
                 {/* Description */}
-                <p>
+                <p className="selected-event-description-row">
                   <b>Description:</b>{" "}
                   {isEditingEvent ? (
                     <textarea
@@ -1419,7 +1458,7 @@ onClick={()=>setTab("validation")}
                 </p>
 
                 {/* Volunteers */}
-                <p>
+                <p className="selected-event-legacy-row">
                   <b>Volunteers Needed:</b>{" "}
                   {isEditingEvent ? (
                     <input
@@ -1438,7 +1477,7 @@ onClick={()=>setTab("validation")}
                 </p>
 
                 {/* Volunteer Requests */}
-                <h4 style={{ marginTop: "15px" }}>Volunteer Requests</h4>
+                <div className="event-section-heading"><span className="event-section-number">01</span><div><h4>Volunteer Requests</h4><p>Review applications for this event.</p></div><strong>{requests.length}</strong></div>
 
                 {requests.length === 0 ? (
                   <p>No requests yet</p>
@@ -1561,7 +1600,7 @@ onClick={()=>setTab("validation")}
                   )}
 
                 </div>
-                <h4>Assign Work To Volunteers</h4>
+                <div className="event-section-heading"><span className="event-section-number">02</span><div><h4>Assign Work To Volunteers</h4><p>Give approved volunteers a clear responsibility.</p></div><strong>{approvedVolunteers.length}</strong></div>
 
                 <table className="table">
                   <thead>
@@ -1616,7 +1655,7 @@ onClick={()=>setTab("validation")}
                 {eventStatus !== "UPCOMING" && (
                   <div>
 
-                    <h4 style={{ marginTop: "20px" }}>Mark Attendance</h4>
+                    <div className="event-section-heading"><span className="event-section-number">03</span><div><h4>Mark Attendance</h4><p>Record hours and participation status.</p></div></div>
 
                     {eventStatus === "COMPLETED" && (
                       <p style={{ color: "green", fontWeight: "bold" }}>
@@ -1773,7 +1812,7 @@ const status =
                 {/* Volunteer Feedback Section */}
                 {volunteerFeedbacks.length > 0 && (
                   <div style={{ marginTop: "20px" }}>
-                    <h4>Volunteer Feedback</h4>
+                    <div className="event-section-heading"><span className="event-section-number">04</span><div><h4>Volunteer Feedback</h4><p>See what participants thought about the event.</p></div><strong>{volunteerFeedbacks.length}</strong></div>
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <thead>
                         <tr style={{ background: "#f5f5f5" }}>
@@ -1876,20 +1915,24 @@ const status =
         )}
 
         {tab === "rewards" && (
-  <div>
-    <h2>🏆 My Rewards</h2>
+          <div className="rewards-page">
+            <div className="rewards-page-heading">
+              <div>
+                <span className="eyebrow">Recognition & impact</span>
+                <h2><FaTrophy aria-hidden="true" /> My Rewards</h2>
+                <p>Celebrate the milestones you have earned while building stronger communities.</p>
+              </div>
+              <span className="rewards-count">{rewards.length} {rewards.length === 1 ? "badge" : "badges"}</span>
+            </div>
 
     {rewards.length === 0 ? (
-      <p>No rewards yet</p>
+              <div className="rewards-empty-state">
+                <FaTrophy aria-hidden="true" />
+                <strong>Your reward shelf is waiting</strong>
+                <span>Keep creating meaningful events and your recognition badges will appear here.</span>
+              </div>
     ) : (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-          gap: "20px",
-          marginTop: "20px"
-        }}
-      >
+              <div className="organizer-rewards-grid">
         {rewards.map((r, index) => {
 
           const color =
@@ -1900,7 +1943,7 @@ const status =
               : "#CD7F32";
 
           return (
-            <div
+            <div className={`organizer-reward-card reward-${r.badgeType?.toLowerCase() || "bronze"}`}
               key={index}
               style={{
                 background: "white",
@@ -1912,13 +1955,15 @@ const status =
             >
               <FaMedal size={60} color={color} />
 
+              <span className="reward-tier-label">{r.badgeType} TIER</span>
               <h3>{r.badgeType} ORGANIZER BADGE</h3>
 
               <p>Rank {r.rankPosition}</p>
               <p>Year: {r.year}</p>
-              <p>{r.organizerName}</p>
+              <p className="reward-recipient">{r.organizerName}</p>
 
               <button
+                className="reward-download-action"
                 onClick={() => shareBadge(r)}
                 style={{
                   background: "#3498db",
@@ -2037,30 +2082,36 @@ Upload Document
 )}
 
         {tab === "notifications" && (
-          <div style={{ ...cardStyle, textAlign: "left" }}>
-            <h3>Notifications</h3>
+          <div className="notifications-panel" style={{ ...cardStyle, textAlign: "left" }}>
+            <div className="notifications-heading">
+              <div>
+                <span className="eyebrow">Keep your community moving</span>
+                <h3>Notifications</h3>
+                <p>Requests, volunteer updates, and event activity in one place.</p>
+              </div>
+              <span className="notification-count">{unreadCount} unread</span>
+            </div>
             {notifications.length === 0 ? (
-              <p>No notifications</p>
+              <div className="notification-empty">
+                <FaBell size={24} />
+                <strong>You are all caught up</strong>
+                <span>New updates will appear here.</span>
+              </div>
             ) : (
               notifications.map((n) => (
-                <div key={n.id} style={{
-                  background: n.read ? "#eee" : "#d4edda",
-                  padding: "10px",
-                  margin: "5px",
-                  borderRadius: "5px",
-                  display: "flex",
-                  justifyContent: "space-between"
-                }}>
-                  {n.message}
-                  <small style={{ color: "gray" }}>
-                    {formatTimeAgo(n.createdAt)}
-                  </small>
+                <div key={n.id} className={`notification-item ${n.read ? "is-read" : "is-unread"}`}>
+                  <span className="notification-dot" aria-hidden="true" />
+                  <div className="notification-copy">
+                    <p>{n.message}</p>
+                    <small>{formatTimeAgo(n.createdAt)}</small>
+                  </div>
                   {n.read && (
                     <button
                       className="delete-btn"
-                      onClick={() => deleteNotification(n.id)} style={{ alignItems: "right" }}
+                      onClick={() => deleteNotification(n.id)}
                     >
-                      <FaTrash />
+                      <FaTrash aria-hidden="true" />
+                      <span className="sr-only">Delete notification</span>
                     </button>
                   )}
                 </div>
@@ -2071,7 +2122,7 @@ Upload Document
       </div>
       {shareReward && (
 
-  <div
+            <div className={`organizer-reward-card reward-${r.badgeType?.toLowerCase() || "bronze"}`}
     id="badge-share-card"
     style={{
      position: "fixed",

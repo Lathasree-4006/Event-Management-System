@@ -18,17 +18,18 @@ function ResetPassword({ token, setPage }) {
     }
   };
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <div className="password-page" style={styles.container}>
+      <div className="password-card" style={styles.card}>
         <h2>Reset Password</h2>
         <input
+          className="password-input"
           type="password"
           placeholder="New password"
           onChange={(e) => setPassword(e.target.value)}
           style={styles.input}
         />
 
-        <button onClick={handleReset} style={styles.button}>
+        <button className="password-action" onClick={handleReset} style={styles.button}>
           Reset
         </button>
       </div>

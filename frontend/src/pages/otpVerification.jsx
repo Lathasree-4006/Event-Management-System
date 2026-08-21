@@ -104,7 +104,7 @@ function OtpVerification({ userData, setPage }) {
           </div>
 
           </div>
-    <div class="verify-otp-card">
+    <div className="verify-otp-card">
     <div>
       <h2>Enter the 6-digit OTP</h2>
 

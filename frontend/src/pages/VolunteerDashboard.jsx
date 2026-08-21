@@ -527,7 +527,7 @@ const fetchValidationStatus = async () => {
 };
 
   return (
-    <div style={{ height: "100vh", overflow: "hidden", fontFamily: "Arial" }}>
+    <div className="dashboard-shell" style={{ height: "100vh", overflow: "hidden", fontFamily: "Arial" }}>
       <header
         style={{
           position: "fixed",
@@ -679,7 +679,7 @@ onClick={() => setTab("validation")}
         </div>
       )}
 
-      <div
+      <div className="dashboard-content"
         style={{
           position: "absolute",
           top: "60px",
@@ -696,7 +696,7 @@ onClick={() => setTab("validation")}
           Welcome, {profile.name}
         </h2>
 
-        <div
+        <div className="volunteer-profile-summary"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
@@ -722,83 +722,109 @@ onClick={() => setTab("validation")}
 
 
         {tab === "profile" && (
-          <div style={{ ...cardStyle, textAlign: "left" }}>
-            <h3>Profile Details</h3>
+          <div className="volunteer-form-card" style={{ ...cardStyle, textAlign: "left" }}>
+            <div className="volunteer-identity-header">
+              <div className="volunteer-avatar-large">
+                {profile.name?.charAt(0).toUpperCase() || "V"}
+              </div>
+              <div className="volunteer-identity-copy">
+                <span className="eyebrow">Volunteer account</span>
+                <h2>{profile.name}</h2>
+                <p>{profile.email}</p>
+                <div className="identity-badges">
+                  <span className="identity-role">Volunteer</span>
+                  {validationStatus === "APPROVED" && <span className="identity-verified"><MdVerified /> Verified profile</span>}
+                </div>
+              </div>
+              <div className="identity-location">{profile.city || profile.state || "Community member"}</div>
+            </div>
+            <div className="form-heading-row">
+              <div>
+                <span className="eyebrow">Your information</span>
+                <h3>Profile Details</h3>
+                <p className="form-helper">Keep your contact details current so organizers can reach you.</p>
+              </div>
+              <span className="profile-status">{profile.status || "ACTIVE"}</span>
+            </div>
 
-            <p><strong>Email:</strong> {profile.email}</p>
+            <div className="profile-section-label">Contact & interests</div>
+            <div className="profile-fields">
+            <div className="profile-field"><strong>Email</strong><span>{profile.email}</span></div>
 
-            <p>
-              <strong>Phone:</strong>{" "}
+            <div className="profile-field">
+              <strong>Phone</strong>
               {editMode ? (
                 <input name="phone" value={profile.phone || ""} onChange={handleChange} />
               ) : (
                 profile.phone
               )}
-            </p>
+            </div>
 
-            <p>
-              <strong>Full Address:</strong>{" "}
+            <div className="profile-field">
+              <strong>Full Address</strong>
               {editMode ? (
                 <input name="fullAddress" value={profile.fullAddress || ""} onChange={handleChange} />
               ) : (
                 profile.fullAddress
               )}
-            </p>
+            </div>
 
-            <p>
-              <strong>Languages Known:</strong>{" "}
+            <div className="profile-field">
+              <strong>Languages Known</strong>
               {editMode ? (
                 <input name="languagesKnown" value={profile.languagesKnown || ""} onChange={handleChange} />
               ) : (
                 profile.languagesKnown
               )}
-            </p>
+            </div>
 
-            <p>
-              <strong>Areas of Interest:</strong>{" "}
+            <div className="profile-field">
+              <strong>Areas of Interest</strong>
               {editMode ? (
                 <input name="areasOfInterest" value={profile.areasOfInterest || ""} onChange={handleChange} />
               ) : (
                 profile.areasOfInterest
               )}
-            </p>
+            </div>
+            </div>
 
-            <div style={{ marginTop: "15px" }}>
+            <div className="form-actions">
               {!editMode ? (
-                <button onClick={() => setEditMode(true)} style={{ backgroundColor: "rgb(235, 156, 10)" }}>Edit Profile</button>
+                <button className="form-primary-action" onClick={() => setEditMode(true)}>Edit Profile</button>
               ) : (
-                <button onClick={handleSave} style={{ backgroundColor: "rgb(235, 156, 10)" }}>Save Changes</button>
+                <button className="form-primary-action" onClick={handleSave}>Save Changes</button>
               )}
             </div>
           </div>
         )}
 
         {tab === "notifications" && (
-          <div style={{ ...cardStyle, textAlign: "left" }}>
-            <h3>Notifications</h3>
+          <div className="notifications-panel" style={{ ...cardStyle, textAlign: "left" }}>
+            <div className="notifications-heading">
+              <div>
+                <span className="eyebrow">Stay up to date</span>
+                <h3>Notifications</h3>
+                <p>Updates about applications, assignments, and your community work.</p>
+              </div>
+              <span className="notification-count">{unreadCount} unread</span>
+            </div>
             {notifications.length === 0 ? (
-              <p>No notifications</p>
+              <div className="notification-empty">
+                <FaBell size={24} />
+                <strong>You are all caught up</strong>
+                <span>New updates will appear here.</span>
+              </div>
             ) : (
               notifications.map((n) => (
-                <div key={n.id} style={{
-                  background: n.read
-                    ? "#eee"
-                    : n.message.includes("APPROVED")
-                      ? "#c3e6cb" // green for approved task
-                      : "#fff3cd",  // yellow for other unread
-                  padding: "10px",
-                  margin: "15px",
-                  borderRadius: "5px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }}>
-                  <p style={{ flex: 1 }}>{n.message}</p>
-                  <small style={{ color: "gray" }}>
-                    {formatTimeAgo(n.createdAt)}
-                  </small>
+                <div key={n.id} className={`notification-item ${n.read ? "is-read" : "is-unread"}`}>
+                  <span className="notification-dot" aria-hidden="true" />
+                  <div className="notification-copy">
+                    <p>{n.message}</p>
+                    <small>{formatTimeAgo(n.createdAt)}</small>
+                  </div>
                   <button className="delete-btn" onClick={() => deleteNotification(n.id)}>
-                    <FaTrash />
+                    <FaTrash aria-hidden="true" />
+                    <span className="sr-only">Delete notification</span>
                   </button>
                 </div>
               ))
@@ -809,12 +835,15 @@ onClick={() => setTab("validation")}
 
 
         {tab === "events" && (
-          <div style={{ ...cardStyle, textAlign: "left" }}>
-            <h3>Available Events</h3>
+          <div className="volunteer-form-card" style={{ ...cardStyle, textAlign: "left" }}>
+            <div className="form-heading-row">
+              <div><span className="eyebrow">Find your next opportunity</span><h3>Available Events</h3></div>
+            </div>
 
-            <div style={{ marginBottom: "15px", justifyContent: "right", display: "flex", paddingRight: "12px" }}>
-              <button onClick={filterEvents} style={{ borderRadius: "200px", border: "1px solid black" }}><FaFilter /></button>
+            <div className="event-filter-bar">
+              <button className="filter-action" onClick={filterEvents}><FaFilter /><span>Filter events</span></button>
               <input
+                aria-label="Filter by location"
                 placeholder="Location"
                 value={filters.location}
                 onChange={e => setFilters({ ...filters, location: e.target.value })}
@@ -822,6 +851,7 @@ onClick={() => setTab("validation")}
               />
 
               <select
+                aria-label="Filter by category"
                 value={filters.category}
                 onChange={e => setFilters({ ...filters, category: e.target.value })}
                 style={{ marginRight: "10px" }}
@@ -871,13 +901,31 @@ onClick={() => setTab("validation")}
           </div>
         )}
         {tab === "requests" && (
-          <div style={{ ...cardStyle, textAlign: "left" }}>
-            <h3>My Requests</h3>
+          <div className="requests-panel" style={{ ...cardStyle, textAlign: "left" }}>
+            <div className="requests-page-heading">
+              <div>
+                <span className="eyebrow">Your participation</span>
+                <h2>My Requests</h2>
+                <p>Track every event application from submission to confirmation.</p>
+              </div>
+              <span className="requests-total">{requests.length} total</span>
+            </div>
+
+            <div className="request-summary-strip">
+              <div><span className="request-summary-label">Pending</span><strong>{requests.filter(r => r.status === "PENDING").length}</strong></div>
+              <div><span className="request-summary-label">Approved</span><strong>{requests.filter(r => r.status === "APPROVED").length}</strong></div>
+              <div><span className="request-summary-label">Rejected</span><strong>{requests.filter(r => r.status === "REJECTED").length}</strong></div>
+            </div>
 
             {requests.length === 0 ? (
-              <p>No requests found</p>
+              <div className="requests-empty-state">
+                <FaInbox aria-hidden="true" />
+                <strong>No requests yet</strong>
+                <span>Browse available events and apply when you find the right opportunity.</span>
+              </div>
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "15px" }}>
+              <div className="requests-table-wrap" style={{ overflowX: "auto" }}>
+              <table className="requests-table" style={{ width: "100%", borderCollapse: "collapse", marginTop: "15px" }}>
                 <thead>
                   <tr style={{ background: "#ffffff", color: "Black" }}>
                     <th style={thStyle}>Event</th>
@@ -892,14 +940,14 @@ onClick={() => setTab("validation")}
                 <tbody>
                   {requests.map((r) => (
                     <tr key={r.id} style={{ borderBottom: "1px solid #ddd" }}>
-                      <td style={tdStyle}>{r.eventName}</td>
-                      <td style={tdStyle}>{r.location}</td>
+                      <td style={tdStyle}><strong className="request-event-name">{r.eventName}</strong></td>
+                      <td style={tdStyle}><span className="request-location">{r.location}</span></td>
                       <td style={tdStyle}>{r.organizerName}</td>
                       <td style={tdStyle}>
                         {new Date(r.startDateTime).toLocaleDateString()}
                       </td>
                       <td style={tdStyle}>
-                        <span
+                        <span className={`request-status request-status-${r.status?.toLowerCase()}`}
                           style={{
                             padding: "5px 10px",
                             borderRadius: "15px",
@@ -922,18 +970,37 @@ onClick={() => setTab("validation")}
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         )}
 
         {tab === "certificate" && (
-          <div style={{ ...cardStyle, textAlign: "left" }}>
-            <h3>My Certificates</h3>
+          <div className="volunteer-certificates-panel" style={{ ...cardStyle, textAlign: "left" }}>
+            <div className="volunteer-certificates-heading">
+              <div>
+                <span className="eyebrow">Your achievements</span>
+                <h2><FaCertificate aria-hidden="true" /> My Certificates</h2>
+                <p>Download certificates for completed events and celebrate your contribution.</p>
+              </div>
+              <span className="certificate-count">{certificateEvents.filter(event => event.certificateApproved && (event.attendancePercentage || 0) >= 75).length} earned</span>
+            </div>
+
+            <div className="volunteer-certificate-summary">
+              <div><span>Completed events</span><strong>{certificateEvents.length}</strong></div>
+              <div><span>Ready to download</span><strong>{certificateEvents.filter(event => event.certificateApproved && (event.attendancePercentage || 0) >= 75).length}</strong></div>
+              <div><span>Awaiting approval</span><strong>{certificateEvents.filter(event => !event.certificateApproved).length}</strong></div>
+            </div>
 
             {certificateEvents.length === 0 ? (
-              <p>No certificates available yet</p>
+              <div className="volunteer-certificate-empty">
+                <FaCertificate aria-hidden="true" />
+                <strong>No certificates yet</strong>
+                <span>Complete volunteer events and meet the attendance requirement to earn one.</span>
+              </div>
             ) : (
-              <table
+              <div className="volunteer-certificate-table-wrap" style={{ overflowX: "auto" }}>
+              <table className="volunteer-certificate-table"
                 border="1"
                 cellPadding="8"
                 cellSpacing="0"
@@ -968,7 +1035,7 @@ onClick={() => setTab("validation")}
 
                     return (
                       <tr key={event.eventId}>
-                        <td style={{ padding: "12px", textAlign: "center" }}>{event.eventName}</td>
+                        <td style={{ padding: "12px", textAlign: "left" }}><strong className="certificate-event-name">{event.eventName}</strong><small>Volunteer contribution</small></td>
 
                         <td style={{ padding: "12px", textAlign: "center" }}>{event.location}</td>
 
@@ -976,10 +1043,10 @@ onClick={() => setTab("validation")}
                           {new Date(event.startDateTime).toLocaleDateString()}
                         </td>
 
-                        <td style={{ padding: "12px", textAlign: "center" }}>{event.hoursAttended} hrs</td>
+                        <td style={{ padding: "12px", textAlign: "center" }}><span className="certificate-hours-pill">{event.hoursAttended} hrs</span></td>
 
                         <td style={{ padding: "12px", textAlign: "center" }}>
-                          <span
+                          <span className={`certificate-attendance-score ${percentage >= 75 ? "is-ready" : "is-low"}`}
                             style={{
                               fontWeight: "bold",
                               color:
@@ -995,7 +1062,7 @@ onClick={() => setTab("validation")}
                         </td>
 
                         <td>
-                          <button
+                          <button className="certificate-download-action"
                             disabled={percentage < 75 || !event.certificateApproved}
                             onClick={() => downloadCertificate(event.eventId)}
                             style={{
@@ -1025,19 +1092,21 @@ onClick={() => setTab("validation")}
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         )}
 
 {tab === "validation" && (
 
-<div style={{
+<div className="verification-card" style={{
 background:"white",
 padding:"25px",
 borderRadius:"10px",
 boxShadow:"0 2px 6px rgba(0,0,0,0.1)"
 }}>
 
+<span className="eyebrow">Trust & safety</span>
 <h2>Account Verification</h2>
 
 <p>
@@ -1069,6 +1138,9 @@ Admin will review and approve your account.
 
 <>
 
+<label className="file-upload-box">
+<span>Upload a government ID</span>
+<small>PNG, JPG or JPEG. Your document is reviewed by an administrator.</small>
 <input
   type="file"
   accept="image/png, image/jpg, image/jpeg"
@@ -1081,7 +1153,8 @@ Admin will review and approve your account.
     setPreview(previewURL);
   }
 }}
-/>
+/> 
+</label>
 <br/>
 {preview && (
   <div style={{ marginTop: "15px" }}>
@@ -1103,7 +1176,7 @@ Admin will review and approve your account.
 
 <br/>
 
-<button
+<button className="form-primary-action upload-action"
 onClick={uploadValidationDocument}
 disabled={!document}
 >
@@ -1128,11 +1201,18 @@ Upload Document
 
 
         {tab === "history" && (
-          <div>
-            <h2 style={{ marginBottom: "15px" }}>My Events</h2>
+          <div className="history-page">
+            <div className="history-page-heading">
+              <div>
+                <span className="eyebrow">Your impact trail</span>
+                <h2>Participation History</h2>
+                <p>Review the events you joined, your attendance, and the feedback you shared.</p>
+              </div>
+              <span className="history-total">{historyEvents.length} events</span>
+            </div>
 
             {/* History cards */}
-            <div
+            <div className="history-event-grid"
               style={{
                 display: "grid",
                 gap: "15px",
@@ -1142,7 +1222,7 @@ Upload Document
               {historyEvents.map(event => (
                 <div
     key={event.eventId}
-    className="history-event-card"
+    className={`history-event-card ${selectedHistoryEvent?.eventId === event.eventId ? "is-selected" : ""}`}
     onClick={() => {
       setSelectedHistoryEvent(event);
       setRating(0);
@@ -1188,7 +1268,7 @@ Upload Document
 
             {/* Selected Event Details */}
             {selectedHistoryEvent && (
-              <div
+              <div className="history-detail-card"
                 style={{
                   marginTop: "20px",
                   background: "white",
@@ -1197,17 +1277,18 @@ Upload Document
                   boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
                 }}
               >
-                <h3>{selectedHistoryEvent.eventName}</h3><hr></hr>
+                <div className="history-detail-heading"><div><span className="eyebrow">Selected event</span><h3>{selectedHistoryEvent.eventName}</h3></div><span className="history-detail-status">{getEventStatus(selectedHistoryEvent).text}</span></div>
+                <hr></hr>
                 <p><b>Location:</b> {selectedHistoryEvent.location}</p>
                 <p><b>Start:</b> {new Date(selectedHistoryEvent.startDateTime).toLocaleString()}</p>
                 <p><b>End:</b> {new Date(selectedHistoryEvent.endDateTime).toLocaleString()}</p>
                 <p><b>Assigned Task:</b> {selectedHistoryEvent.assignedWork}</p>
                 <hr style={{ margin: "15px 0" }} />
 
-                <h4>Attendance Details</h4>
+                <div className="history-section-heading"><FaCalendarAlt /><h4>Attendance Details</h4></div>
 
                 {selectedEventAttendance ? (
-                  <div>
+                  <div className="attendance-record">
                     <p>
                       <b>Status:</b>{" "}
                       <span
@@ -1271,8 +1352,8 @@ Upload Document
                 )}
 <hr></hr>
                 {isEventCompleted(selectedHistoryEvent.endDateTime) && (
-                  <div>
-                    <h4>Feedback</h4>
+                  <div className="history-feedback-section">
+                    <div className="history-section-heading"><FaStar /><h4>Feedback</h4></div>
 
                     {submittedFeedback[selectedHistoryEvent.eventId] ? (
 
@@ -1293,7 +1374,7 @@ Upload Document
   ))}
 </div>
 
-<textarea
+<textarea className="feedback-textarea"
   value={message}
   onChange={(e) => setMessage(e.target.value)}
   style={{
@@ -1331,7 +1412,7 @@ Upload Document
   </div>
 
   {/* Feedback Message */}
-  <textarea
+  <textarea className="feedback-textarea"
     placeholder="Write your feedback..."
     value={message}
     onChange={(e) => setMessage(e.target.value)}

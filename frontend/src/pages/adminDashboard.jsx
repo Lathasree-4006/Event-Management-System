@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import { FaUser, FaCalendarAlt, FaCommentDots, FaUsers, FaHourglassHalf, FaSignOutAlt, FaGraduationCap, FaChartPie } from "react-icons/fa";
+import { FaUser, FaCalendarAlt, FaCommentDots, FaUsers, FaHourglassHalf, FaSignOutAlt, FaGraduationCap, FaChartPie, FaSearch, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTimes } from "react-icons/fa";
 import {
   PieChart,
   Pie,
@@ -29,6 +29,10 @@ function AdminDashboard({ userData, setPage }) {
   const [selectedOrganizerName, setSelectedOrganizerName] = useState("");
   const [eventVolunteerData, setEventVolunteerData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [userSearch, setUserSearch] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState("all");
+  const [userStatusFilter, setUserStatusFilter] = useState("all");
+  const [selectedUser, setSelectedUser] = useState(null);
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -325,6 +329,23 @@ function AdminDashboard({ userData, setPage }) {
   const pendingVolunteers = volunteers.filter(v => v.status === "PENDING");
   const pendingOrganizers = organizers.filter(o => o.status === "PENDING");
 
+  const matchesUserFilters = (user, role) => {
+    const search = userSearch.trim().toLowerCase();
+    const searchableText = [user.name, user.email, user.phone, user.fullAddress, user.organizationName]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      (userRoleFilter === "all" || userRoleFilter === role) &&
+      (userStatusFilter === "all" || user.status?.toUpperCase() === userStatusFilter) &&
+      (!search || searchableText.includes(search))
+    );
+  };
+
+  const filteredVolunteers = volunteers.filter(v => matchesUserFilters(v, "volunteer"));
+  const filteredOrganizers = organizers.filter(o => matchesUserFilters(o, "organizer"));
+
   if (loading) return <p>Loading admin dashboard...</p>;
 
   const getStatusBadge = status => {
@@ -472,7 +493,7 @@ function AdminDashboard({ userData, setPage }) {
   };
 
   return (
-    <div style={{ height: "100vh", overflow: "hidden", fontFamily: "Arial" }}>
+    <div className="dashboard-shell admin-dashboard-shell" style={{ height: "100vh", overflow: "hidden", fontFamily: "Arial" }}>
       <header
         style={{
           position: "fixed",
@@ -490,8 +511,11 @@ function AdminDashboard({ userData, setPage }) {
         }}
       >
         <button onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
-        <h3>Admin Dashboard</h3>
-        <div
+        <div className="admin-header-title">
+          <span className="eyebrow">Operations center</span>
+          <h3>Admin Dashboard</h3>
+        </div>
+        <div className="admin-kpi-grid"
           style={{
             width: "40px",
             height: "40px",
@@ -554,7 +578,7 @@ function AdminDashboard({ userData, setPage }) {
           </ul>
         </div>
       )}
-      <div
+      <div className="dashboard-content admin-dashboard-content"
         style={{
           position: "absolute",
           top: "60px",
@@ -576,17 +600,69 @@ function AdminDashboard({ userData, setPage }) {
             marginBottom: "30px"
           }}
         >
-          <div style={cardStyle}><h4>Total Volunteers</h4><p>{volunteers.length}</p></div>
-          <div style={cardStyle}><h4>Total Organizers</h4><p>{organizers.length}</p></div>
-          <div style={cardStyle}><h4>Pending Volunteers</h4><p>{pendingVolunteers.length}</p></div>
-          <div style={cardStyle}><h4>Pending Organizers</h4><p>{pendingOrganizers.length}</p></div>
+          <div className="admin-kpi-card" style={cardStyle}><span className="kpi-label">Total Volunteers</span><p>{volunteers.length}</p><small>Registered accounts</small></div>
+          <div className="admin-kpi-card" style={cardStyle}><span className="kpi-label">Total Organizers</span><p>{organizers.length}</p><small>Community partners</small></div>
+          <div className="admin-kpi-card admin-kpi-alert" style={cardStyle}><span className="kpi-label">Pending Volunteers</span><p>{pendingVolunteers.length}</p><small>Needs review</small></div>
+          <div className="admin-kpi-card admin-kpi-alert" style={cardStyle}><span className="kpi-label">Pending Organizers</span><p>{pendingOrganizers.length}</p><small>Needs review</small></div>
         </div>
 
         {tab === "all" && (
           <>
-            <h3>All Volunteers</h3>
-            <div style={{ overflowX: "auto" }}>
-              <table style={tableStyle}>
+            <div className="users-directory-heading">
+              <div>
+                <span className="eyebrow">People directory</span>
+                <h2>All Users</h2>
+                <p>Search, filter, and inspect every volunteer and organizer account.</p>
+              </div>
+              <span className="users-result-count">{filteredVolunteers.length + filteredOrganizers.length} of {volunteers.length + organizers.length} shown</span>
+            </div>
+
+            <div className="users-toolbar">
+              <label className="users-search">
+                <FaSearch aria-hidden="true" />
+                <input
+                  type="search"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Search name, email, phone, address..."
+                  aria-label="Search users"
+                />
+              </label>
+              <div className="users-segmented" role="group" aria-label="Filter by role">
+                {["all", "volunteer", "organizer"].map((role) => (
+                  <button key={role} className={userRoleFilter === role ? "is-active" : ""} onClick={() => setUserRoleFilter(role)}>
+                    {role === "all" ? "Everyone" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}
+                  </button>
+                ))}
+              </div>
+              <select value={userStatusFilter} onChange={(e) => setUserStatusFilter(e.target.value)} aria-label="Filter by status">
+                <option value="all">All statuses</option>
+                <option value="APPROVED">Approved</option>
+                <option value="PENDING">Pending</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
+
+            {selectedUser && (
+              <div className="selected-user-panel">
+                <div className="selected-user-avatar">{selectedUser.name?.charAt(0).toUpperCase() || "U"}</div>
+                <div className="selected-user-info">
+                  <span className="eyebrow">Selected account</span>
+                  <h3>{selectedUser.name}</h3>
+                  <div className="selected-user-meta">
+                    <span><FaEnvelope /> {selectedUser.email || "No email"}</span>
+                    <span><FaPhone /> {selectedUser.phone || "No phone"}</span>
+                    <span><FaMapMarkerAlt /> {selectedUser.fullAddress || "No address"}</span>
+                  </div>
+                </div>
+                <button className="close-user-panel" onClick={() => setSelectedUser(null)} aria-label="Close selected user details"><FaTimes /></button>
+              </div>
+            )}
+
+            <section className="users-table-section">
+              <div className="users-section-heading"><h3>Volunteers</h3><span>{filteredVolunteers.length} accounts</span></div>
+            <div className="admin-user-table-wrap" style={{ overflowX: "auto" }}>
+              <table className="admin-user-table" style={tableStyle}>
                 <thead style={{ background: "#f4f6f8" }}>
                   <tr>
                     <th style={thTdStyle}>Name</th>
@@ -598,9 +674,9 @@ function AdminDashboard({ userData, setPage }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {volunteers.map(v => (
-                    <tr key={v.id}>
-                      <td style={thTdStyle}>{v.name}</td>
+                  {filteredVolunteers.map(v => (
+                    <tr key={v.id} className={selectedUser?.id === v.id ? "selected-user-row" : ""} onClick={() => setSelectedUser(v)}>
+                      <td style={thTdStyle}><strong>{v.name}</strong><small>Volunteer</small></td>
                       <td style={thTdStyle}>{v.email}</td>
                       <td style={thTdStyle}>{v.phone}</td>
                       <td style={thTdStyle}>{v.fullAddress}</td>
@@ -610,11 +686,14 @@ function AdminDashboard({ userData, setPage }) {
                   ))}
                 </tbody>
               </table>
+              {filteredVolunteers.length === 0 && <div className="users-empty-state">No volunteers match the current filters.</div>}
             </div>
 
-            <h3>All Organizers</h3>
-            <div style={{ overflowX: "auto" }}>
-              <table style={tableStyle}>
+            </section>
+            <section className="users-table-section">
+              <div className="users-section-heading"><h3>Organizers</h3><span>{filteredOrganizers.length} accounts</span></div>
+            <div className="admin-user-table-wrap" style={{ overflowX: "auto" }}>
+              <table className="admin-user-table" style={tableStyle}>
                 <thead style={{ background: "#f4f6f8" }}>
                   <tr>
                     <th style={thTdStyle}>Name</th>
@@ -628,9 +707,9 @@ function AdminDashboard({ userData, setPage }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {organizers.map(o => (
-                    <tr key={o.id}>
-                      <td style={thTdStyle}>{o.name}</td>
+                  {filteredOrganizers.map(o => (
+                    <tr key={o.id} className={selectedUser?.id === o.id ? "selected-user-row" : ""} onClick={() => setSelectedUser(o)}>
+                      <td style={thTdStyle}><strong>{o.name}</strong><small>Organizer</small></td>
                       <td style={thTdStyle}>{o.email}</td>
                       <td style={thTdStyle}>{o.phone}</td>
                       <td style={thTdStyle}>{o.fullAddress}</td>
@@ -642,20 +721,26 @@ function AdminDashboard({ userData, setPage }) {
                   ))}
                 </tbody>
               </table>
+              {filteredOrganizers.length === 0 && <div className="users-empty-state">No organizers match the current filters.</div>}
             </div>
+            </section>
           </>
         )}
 
         {/* Pending certificates*/}
         {tab === "Pending Certificates" && (
           <>
-            <h3 style={{ marginBottom: "15px" }}>
-              <FaGraduationCap style={{ marginRight: "8px" }} />
-              Certificate Approvals
-            </h3>
+            <div className="certificate-page-heading">
+              <div>
+                <span className="eyebrow">Recognition queue</span>
+                <h2><FaGraduationCap aria-hidden="true" /> Certificate Approvals</h2>
+                <p>Review attendance records before issuing volunteer certificates.</p>
+              </div>
+              <span className="certificate-count">{certificates.filter(c => !c.certificateApproved).length} pending</span>
+            </div>
 
-            <div style={{ overflowX: "auto" }}>
-              <table style={tableStyle}>
+            <div className="certificate-table-wrap" style={{ overflowX: "auto" }}>
+              <table className="certificate-table" style={tableStyle}>
 
                 <thead style={{ background: "#f4f6f8" }}>
                   <tr>
@@ -673,8 +758,10 @@ function AdminDashboard({ userData, setPage }) {
                   {certificates.length === 0 ? (
 
                     <tr>
-                      <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>
-                        No certificates found
+                      <td colSpan="6" className="certificate-empty" style={{ textAlign: "center", padding: "20px" }}>
+                        <FaGraduationCap aria-hidden="true" />
+                        <strong>No certificates awaiting review</strong>
+                        <span>Approved certificate requests will appear here.</span>
                       </td>
                     </tr>
 
@@ -684,14 +771,16 @@ function AdminDashboard({ userData, setPage }) {
 
                       <tr key={index}>
 
-                        <td style={thTdStyle}>{c.volunteerName}</td>
+                        <td style={thTdStyle}><strong className="certificate-volunteer-name">{c.volunteerName}</strong></td>
 
                         <td style={thTdStyle}>{c.eventName}</td>
 
-                        <td style={thTdStyle}>{c.hoursAttended} hrs</td>
+                        <td style={thTdStyle}><span className="hours-pill">{c.hoursAttended} hrs</span></td>
 
                         <td style={thTdStyle}>
-                          {c.attendancePercentage ? `${c.attendancePercentage}%` : "0%"}
+                          <span className={`attendance-score ${c.attendancePercentage >= 75 ? "attendance-ready" : "attendance-low"}`}>
+                            {c.attendancePercentage ? `${c.attendancePercentage}%` : "0%"}
+                          </span>
                         </td>
                         {/* STATUS */}
                         <td style={thTdStyle}>
@@ -713,6 +802,7 @@ function AdminDashboard({ userData, setPage }) {
 
                             <button
                               disabled
+                              className="certificate-status approved"
                               style={{
                                 background: "#95a5a6",
                                 color: "white",
@@ -727,6 +817,7 @@ function AdminDashboard({ userData, setPage }) {
                           ) : (
 
                             <button
+                              className="certificate-status pending"
                               style={{
                                 background: "#28a745",
                                 color: "white",
@@ -763,7 +854,8 @@ function AdminDashboard({ userData, setPage }) {
             <h2 style={{ marginBottom: "20px" }}>Analytics</h2>
 
             <div
-              style={{
+                              className="certificate-approve-action"
+                              style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
                 gap: "20px",
@@ -1153,11 +1245,18 @@ function AdminDashboard({ userData, setPage }) {
 
         {tab === "feedback" && (
           <>
-            <h2>Volunteer Feedback</h2>
+            <div className="feedback-page-heading">
+              <div>
+                <span className="eyebrow">Community voice</span>
+                <h2>Volunteer Feedback</h2>
+                <p>Review experiences, celebrate strong organizers, and turn feedback into better events.</p>
+              </div>
+              <span className="feedback-total">{feedbacks.length} reviews</span>
+            </div>
 
             {/* TOP ORGANIZERS */}
 
-            <div
+            <div className="feedback-ranking-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
@@ -1167,12 +1266,17 @@ function AdminDashboard({ userData, setPage }) {
             >
 
               {topOrganizers.map((org, index) => (
-                <div key={index} style={cardStyle}>
-                  <h3>Rank {index + 1}</h3>
-                  <p><b>{org.name}</b></p>
-                  <p>Event: {org.eventName}</p>
-                  <p>Avg Rating ⭐ {org.avgRating.toFixed(2)}</p>
+                <div key={index} className={`feedback-rank-card rank-${index + 1}`} style={cardStyle}>
+                  <span className="rank-label">Rank {index + 1}</span>
+                  <div className="rank-number">{index + 1}</div>
+                  <h3>{org.name}</h3>
+                  <p className="rank-event">{org.eventName}</p>
+                  <div className="rank-rating">
+                    <span className="rating-stars" aria-label={`${org.avgRating.toFixed(2)} out of 5 stars`}>★★★★★</span>
+                    <strong>{org.avgRating.toFixed(2)}</strong>
+                  </div>
                   <button
+                    className="badge-action"
                     disabled={org.badgeIssued}
                     onClick={() => issueBadge(org.name, index + 1)}
                     style={{
@@ -1194,9 +1298,9 @@ function AdminDashboard({ userData, setPage }) {
 
             {/* FEEDBACK TABLE */}
 
-            <div style={{ overflowX: "auto" }}>
+            <div className="feedback-table-wrap" style={{ overflowX: "auto" }}>
 
-              <table style={tableStyle}>
+              <table className="feedback-table" style={tableStyle}>
 
                 <thead>
                   <tr>
@@ -1224,9 +1328,11 @@ function AdminDashboard({ userData, setPage }) {
 
                       <td style={thTdStyle}>{f.email}</td>
 
-                      <td style={thTdStyle}>⭐ {f.rating}</td>
+                      <td style={thTdStyle}>
+                        <span className="table-rating"><span className="rating-stars">★</span> {f.rating}/5</span>
+                      </td>
 
-                      <td style={thTdStyle}>{f.message}</td>
+                      <td className="feedback-message-cell" style={thTdStyle}>{f.message}</td>
 
                       <td style={thTdStyle}>{f.createdAt}</td>
 
@@ -1246,9 +1352,23 @@ function AdminDashboard({ userData, setPage }) {
         {/* PENDING TAB */}
         {tab === "pending" && (
           <>
-            <h3>Pending Volunteers</h3>
-            <div style={{ overflowX: "auto" }}>
-              <table style={tableStyle}>
+            <div className="pending-page-heading">
+              <div>
+                <span className="eyebrow">Review center</span>
+                <h2>Pending Requests</h2>
+                <p>Review new accounts and decide who can join the volunteer community.</p>
+              </div>
+              <span className="pending-total">{pendingVolunteers.length + pendingOrganizers.length} awaiting review</span>
+            </div>
+
+            <div className="pending-queue-grid">
+            <section className="pending-queue-card">
+              <div className="pending-queue-heading">
+                <div><span className="queue-icon volunteer-queue-icon"><FaUser /></span><div><h3>Volunteers</h3><p>People ready to contribute.</p></div></div>
+                <strong>{pendingVolunteers.length}</strong>
+              </div>
+              <div className="pending-table-wrap" style={{ overflowX: "auto" }}>
+              <table className="pending-table" style={tableStyle}>
                 <thead>
                   <tr>
                     <th style={thTdStyle}>Name</th>
@@ -1259,21 +1379,26 @@ function AdminDashboard({ userData, setPage }) {
                 <tbody>
                   {pendingVolunteers.map(v => (
                     <tr key={v.id}>
-                      <td style={thTdStyle}>{v.name}</td>
+                      <td style={thTdStyle}><strong>{v.name}</strong><small>Volunteer account</small></td>
                       <td style={thTdStyle}>{v.email}</td>
                       <td style={thTdStyle}>
-                        <button onClick={() => handleAction("volunteer", v.id, "approve")}>Approve</button>
-                        <button onClick={() => handleAction("volunteer", v.id, "reject")} style={{ marginLeft: "10px" }}>Reject</button>
+                        <div className="pending-actions"><button className="approve-request" onClick={() => handleAction("volunteer", v.id, "approve")}>Approve</button><button className="reject-request" onClick={() => handleAction("volunteer", v.id, "reject")}>Reject</button></div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
+              {pendingVolunteers.length === 0 && <div className="pending-empty-state">No volunteer requests waiting.</div>}
+              </div>
 
-            <h3>Pending Organizers</h3>
-            <div style={{ overflowX: "auto" }}>
-              <table style={tableStyle}>
+            </section>
+            <section className="pending-queue-card">
+              <div className="pending-queue-heading">
+                <div><span className="queue-icon organizer-queue-icon"><FaUsers /></span><div><h3>Organizers</h3><p>Community partners to verify.</p></div></div>
+                <strong>{pendingOrganizers.length}</strong>
+              </div>
+              <div className="pending-table-wrap" style={{ overflowX: "auto" }}>
+              <table className="pending-table" style={tableStyle}>
                 <thead>
                   <tr>
                     <th style={thTdStyle}>Name</th>
@@ -1284,16 +1409,18 @@ function AdminDashboard({ userData, setPage }) {
                 <tbody>
                   {pendingOrganizers.map(o => (
                     <tr key={o.id}>
-                      <td style={thTdStyle}>{o.name}</td>
+                      <td style={thTdStyle}><strong>{o.name}</strong><small>Organizer account</small></td>
                       <td style={thTdStyle}>{o.email}</td>
                       <td style={thTdStyle}>
-                        <button onClick={() => handleAction("organizer", o.id, "approve")}>Approve</button>
-                        <button onClick={() => handleAction("organizer", o.id, "reject")} style={{ marginLeft: "10px" }}>Reject</button>
+                        <div className="pending-actions"><button className="approve-request" onClick={() => handleAction("organizer", o.id, "approve")}>Approve</button><button className="reject-request" onClick={() => handleAction("organizer", o.id, "reject")}>Reject</button></div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {pendingOrganizers.length === 0 && <div className="pending-empty-state">No organizer requests waiting.</div>}
+              </div>
+            </section>
             </div>
           </>
         )}

@@ -35,14 +35,15 @@ function ForgotPassword({ setPage }) {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <div className="password-page" style={styles.container}>
+      <div className="password-card" style={styles.card}>
         <h2 style={{ marginBottom: "10px" }}>Forgot Password</h2>
         <p style={{ color: "#666", fontSize: "14px" }}>
           Enter your registered email to receive a reset link.
         </p>
 
         <input
+          className="password-input"
           type="email"
           placeholder="Enter your email"
           value={email}
@@ -54,6 +55,7 @@ function ForgotPassword({ setPage }) {
         {error && <p style={styles.error}>{error}</p>}
 
         <button
+          className="password-action"
           onClick={handleSubmit}
           style={styles.button}
           disabled={loading}
@@ -62,6 +64,7 @@ function ForgotPassword({ setPage }) {
         </button>
 
         <p
+          className="password-back"
           style={styles.back}
           onClick={() => setPage("login")}
         >

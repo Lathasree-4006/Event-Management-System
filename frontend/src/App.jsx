@@ -1,4 +1,5 @@
 import "./App.css";
+import "./theme.css";
 import { useState } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -42,7 +43,7 @@ function App() {
   };
 
   return (
-    <div className="container">
+    <div className="app-shell">
 
       <Routes>
 
