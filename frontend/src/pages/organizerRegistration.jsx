@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import logo from "../assets/logo.png";
-
+import api from "../services/api";
 function OrganizerRegistration( {userData , setPage}) {
   if (!userData) return <div>Loading...</div>;
 
@@ -105,18 +105,30 @@ function OrganizerRegistration( {userData , setPage}) {
     if (formData.logo) data.append("logo", formData.logo);
     if (formData.certificate) data.append("certificate", formData.certificate);
 
+    
     try {
-      const res = await fetch("http://localhost:8080/api/organizer/register", {
-        method: "POST",
-        body: data,
-      });
+      const res = await api.post("/organizer/register", data);
 
-      const text = await res.text();
-      alert(text);
+      alert(
+        typeof res.data === "string"
+          ? res.data
+          : res.data?.message || "Registration submitted successfully!"
+      );
     } catch (err) {
-      console.error(err);
-      alert("Registration failed");
+      console.error(
+        "Organizer registration failed:",
+        err.response?.data || err.message
+      );
+
+      const errorMessage =
+        typeof err.response?.data === "string"
+          ? err.response.data
+          : err.response?.data?.message ||
+            "Registration failed. Please try again.";
+
+      alert(errorMessage);
     }
+
   };
 
   const areasList = [
@@ -256,7 +268,7 @@ function OrganizerRegistration( {userData , setPage}) {
           {/* Password */}
           <br />
           <div className="form-row">
-            <input type="text" name="registrationNumber"placeholder="Registration Number" value={formData.registrationNumber} />
+            <input type="text" name="registrationNumber"placeholder="Registration Number" value={formData.registrationNumber}  onChange={handleChange}/>
             <input type="password" name="password" placeholder="Create Password" value={formData.password} onChange={handleChange} required />
             <input type="password" name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} required />
           </div>

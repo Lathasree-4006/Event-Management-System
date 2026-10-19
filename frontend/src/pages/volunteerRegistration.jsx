@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import logo from "../assets/logo.png";
-
+import api from "../services/api";
 function VolunteerRegistration({ userData ,setPage}) {
   if (!userData) return <div>Loading...</div>;
 
@@ -91,17 +91,29 @@ function VolunteerRegistration({ userData ,setPage}) {
     }
 
     try {
-      const res = await fetch("http://localhost:8080/api/volunteer/register", {
-        method: "POST",
-        body: data,
-      });
+      const res = await api.post("/volunteer/register", data);
 
-      const text = await res.text();
-      alert(text);
+      const responseMessage =
+        typeof res.data === "string"
+          ? res.data
+          : res.data?.message || "Registration submitted successfully!";
+
+      alert(responseMessage);
     } catch (err) {
-      console.error(err);
-      alert("Registration failed");
+      console.error(
+        "Volunteer registration failed:",
+        err.response?.data || err.message
+      );
+
+      const errorMessage =
+        typeof err.response?.data === "string"
+          ? err.response.data
+          : err.response?.data?.message ||
+            "Registration failed. Please try again.";
+
+      alert(errorMessage);
     }
+
   };
 
   const languagesList = [

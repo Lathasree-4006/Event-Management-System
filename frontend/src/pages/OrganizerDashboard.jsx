@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import { FaUser, FaCalendarAlt, FaUsers, FaSignOutAlt, FaBell, FaTrash, FaEdit, FaMedal,FaTrophy,FaShieldAlt } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
-import axios from "axios";
 import html2canvas from "html2canvas";
+import { BACKEND_URL } from "../config";
 function OrganizerDashboard({ userData, setPage }) {
   const [profile, setProfile] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -64,8 +64,8 @@ useEffect(() => {
 
 const fetchAttendance = async () => {
   try {
-    const res = await axios.get(
-      `http://localhost:8080/api/attendance/event/${selectedEvent.id}`
+    const res = await api.get(
+      `/attendance/event/${selectedEvent.id}`
     );
 
     setAttendanceData(res.data);
@@ -368,8 +368,8 @@ useEffect(() => {
   const fetchApprovedVolunteers = async (eventId) => {
     try {
 
-      const res = await axios.get(
-        `http://localhost:8080/api/volunteer/approved/${eventId}`
+      const res = await api.get(
+        `/volunteer/approved/${eventId}`
       );
 
       setApprovedVolunteers(res.data);
@@ -429,8 +429,8 @@ useEffect(() => {
       return;
     }
 
-    await axios.post(
-      "http://localhost:8080/api/assignment/assign",
+    await api.post(
+      `/assignment/assign`,
       {
         eventId: selectedEvent.id,
         volunteerId,
@@ -446,12 +446,16 @@ useEffect(() => {
   };
 
   const fetchAssignments = async (eventId) => {
-    const res = await axios.get(
-      `http://localhost:8080/api/assignment/event/${eventId}`
-    );
-
+  try {
+    const res = await api.get(`/assignment/event/${eventId}`);
     setAssignedVolunteers(res.data);
-  };
+  } catch (error) {
+    console.error(
+      "Error fetching assignments:",
+      error.response?.data || error.message
+    );
+  }
+};
 
   const fetchVolunteerFeedbacks = async (eventId) => {
     try {
@@ -940,24 +944,24 @@ onClick={()=>setTab("validation")}
           }}
         >
           <div className="organizer-stat-card stat-events" style={cardStyle}>
-            <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
+            <div style={{textAlign:"center",alignItems : "center",marginTop:"10px"}}>
             <h4>📅 Events</h4>
             <h1>{dashboardStats.totalEvents}</h1></div>
           </div>
 
           <div className="organizer-stat-card stat-volunteers" style={cardStyle}>
-             <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
+             <div style={{textAlign:"center",alignItems : "center",marginTop:"10px"}}>
             <h4>👥 Volunteers</h4>
             <h1>{dashboardStats.totalVolunteers}</h1></div>
           </div>
 
           <div className="organizer-stat-card stat-requests" style={cardStyle}>
-             <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
+             <div style={{textAlign:"center",alignItems : "center",marginTop:"10px"}}>
             <h4>📝 Requests</h4>
             <h1>{dashboardStats.totalRequests}</h1></div>
           </div>
           <div className="organizer-stat-card stat-rating" style={cardStyle}>
-             <div style={{textAilgn:"center",alignItems : "center",marginTop:"10px"}}>
+             <div style={{textAlign:"center",alignItems : "center",marginTop:"10px"}}>
           <h4>⭐ Rating</h4>
 <h1>
   {dashboardStats.avgRating} / 5 
@@ -1764,16 +1768,24 @@ const status =
                                         const hours = hoursInputs[v.volunteerId];
                                         const status = statusInputs[v.volunteerId];
 
-                                        if (!hours || !status) {
-                                          alert("Please enter hours and status");
-                                          return;
-                                        }
+                                        if (
+  hours === undefined ||
+  hours === null ||
+  hours === "" ||
+  !Number.isFinite(Number(hours)) ||
+  Number(hours) < 0 ||
+  Number(hours) > totalEventHours ||
+  !status
+) {
+  alert("Enter valid attendance hours and select a status.");
+  return;
+}
                                         const percentage = totalEventHours
                                           ? ((hours / totalEventHours) * 100).toFixed(1)
                                           : 0;
 
-                                        await axios.post(
-                                          "http://localhost:8080/api/attendance/mark",
+                                        await api.post(
+                                          "/attendance/mark",
                                           {
                                             eventId: selectedEvent.id,
                                             volunteerId: v.volunteerId,
@@ -2011,11 +2023,19 @@ Admin will review and approve your account.
 <br/><br/>
 
 
-    <img
-      src={`http://localhost:8080/${validationDocument}`}
-      alt="Uploaded ID"
-      style={{width:"150px", borderRadius:"6px"}}
-    />
+    
+<img
+  src={
+    validationDocument
+      ? /^https?:\/\//i.test(validationDocument)
+        ? validationDocument
+        : `${BACKEND_URL}/${validationDocument.replace(/^\/+/, "")}`
+      : ""
+  }
+  alt="Uploaded government ID"
+  style={{ width: "150px", borderRadius: "6px" }}
+/>
+
   
 
 </div>
@@ -2028,13 +2048,14 @@ Admin will review and approve your account.
   type="file"
   accept="image/png, image/jpg, image/jpeg"
   onChange={(e) => {
-  const file = e.target.files[0];
-  setGovtIdFile(file);
+  const file = e.target.files?.[0] || null;
 
-  if (file) {
-    const previewURL = URL.createObjectURL(file);
-    setPreview(previewURL);
+  if (preview) {
+    URL.revokeObjectURL(preview);
   }
+
+  setGovtIdFile(file);
+  setPreview(file ? URL.createObjectURL(file) : null);
 }}
 />
 <br/>
@@ -2060,7 +2081,7 @@ Admin will review and approve your account.
 
 <button
 onClick={uploadValidationDocument}
-disabled={!document}
+disabled={!govtIdFile}
 >
 Upload Document
 </button>
@@ -2122,7 +2143,7 @@ Upload Document
       </div>
       {shareReward && (
 
-            <div className={`organizer-reward-card reward-${r.badgeType?.toLowerCase() || "bronze"}`}
+            <div className={`organizer-reward-card reward-${shareReward.badgeType?.toLowerCase() || "bronze"}`}
     id="badge-share-card"
     style={{
      position: "fixed",

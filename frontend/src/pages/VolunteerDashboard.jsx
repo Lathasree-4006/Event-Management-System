@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import axios from "axios";
+import { BACKEND_URL } from "../config";
 import { MdVerified } from "react-icons/md";
 import { FaUser, FaSignOutAlt, FaBell, FaCalendarAlt, FaHistory, FaFilter, FaTrash, FaInbox, FaStar,FaCertificate,FaShieldAlt } from "react-icons/fa";
 function VolunteerDashboard({ userData, setPage, setUserData }) {
@@ -237,30 +237,26 @@ const fetchValidationStatus = async () => {
     setEvents(res.data);
   };
 
-  const submitFeedback = async (eventId) => {
-
+const submitFeedback = async (eventId) => {
   try {
+    await api.post("/feedback/submit", {
+      eventId: eventId,
+      volunteerId: profile.id,
+      rating: rating,
+      message: message,
+    });
 
-    await axios.post(
-      "http://localhost:8080/api/feedback/submit",
-      {
-        eventId: eventId,
-        volunteerId: profile.id,
-        rating: rating,
-        message: message
-      }
-    );
-
-    alert("Feedback Saved");
-
-    // fetch updated feedback from backend
-    fetchFeedback(eventId);
-
+    alert("Feedback saved");
+    await fetchFeedback(eventId);
   } catch (err) {
-    alert(err.response?.data || "Feedback failed");
+    console.error(
+      "Feedback submission failed:",
+      err.response?.data || err.message
+    );
+    alert(err.response?.data?.message || err.response?.data || "Feedback failed");
   }
-
 };
+
 
   const markAllAsRead = async () => {
     try {
@@ -271,28 +267,26 @@ const fetchValidationStatus = async () => {
     }
   };
 
-  const fetchFeedback = async (eventId) => {
+const fetchFeedback = async (eventId) => {
   try {
-    const res = await axios.get(
-      `http://localhost:8080/api/feedback/event/${eventId}/volunteer/${profile.id}`
+    const res = await api.get(
+      `/feedback/event/${eventId}/volunteer/${profile.id}`
     );
 
     if (res.data) {
-
-      setSubmittedFeedback(prev => ({
+      setSubmittedFeedback((prev) => ({
         ...prev,
-        [eventId]: res.data
+        [eventId]: res.data,
       }));
 
-      // load feedback into form
       setRating(res.data.rating);
       setMessage(res.data.message);
     }
-
   } catch (err) {
     console.log("No feedback found");
   }
 };
+
 
   const joinEvent = async (eventId) => {
     if (!profile?.id) return alert("Profile not loaded");
@@ -340,17 +334,19 @@ const fetchValidationStatus = async () => {
     }
   }, [tab, profile]);
 
-  const dropEvent = async (eventId, volunteerId) => {
-    try {
-      const res = await axios.delete(
-        `http://localhost:8080/api/events/${eventId}/cancel/${volunteerId}`
-      );
-      return res;
-    } catch (error) {
-      console.error("Error cancelling participation", error);
-      throw error;
-    }
-  };
+const dropEvent = async (eventId, volunteerId) => {
+  try {
+    return await api.delete(
+      `/events/${eventId}/cancel/${volunteerId}`
+    );
+  } catch (error) {
+    console.error(
+      "Error cancelling participation:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
   useEffect(() => {
     if (tab === "events" && profile?.id) {
       fetchEvents();
@@ -390,35 +386,51 @@ const fetchValidationStatus = async () => {
       fetchCertificates();
     }
   }, [tab, profile]);
+  
+const fetchAttendance = async () => {
+  if (!profile?.id) return;
 
-  const fetchAttendance = async () => {
-    const res = await axios.get(
-      `http://localhost:8080/api/attendance/volunteer/${profile.id}`
+  try {
+    const res = await api.get(
+      `/attendance/volunteer/${profile.id}`
     );
     setAttendance(res.data);
-  };
+  } catch (err) {
+    console.error(
+      "Error fetching attendance:",
+      err.response?.data || err.message
+    );
+  }
+};
 
-  const downloadCertificate = async (eventId) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/certificate/${profile.id}/${eventId}`,
-        { responseType: "blob" }
-      );
+const downloadCertificate = async (eventId) => {
+  try {
+    const response = await api.get(
+      `/certificate/${profile.id}/${eventId}`,
+      { responseType: "blob" }
+    );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
+    const url = window.URL.createObjectURL(
+      new Blob([response.data], { type: "application/pdf" })
+    );
 
-      link.href = url;
-      link.setAttribute("download", "certificate.pdf");
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "certificate.pdf");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
-      document.body.appendChild(link);
-      link.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(
+      "Error downloading certificate:",
+      error.response?.data || error.message
+    );
+    alert("Failed to download certificate");
+  }
+};
 
-    } catch (error) {
-      console.error("Error downloading certificate", error);
-      alert("Failed to download certificate");
-    }
-  };
 
   useEffect(() => {
     if (selectedHistoryEvent && profile?.id) {
@@ -1123,14 +1135,19 @@ Admin will review and approve your account.
 ✅ Your account is Verified
 
 <br/><br/>
+    
+<img
+  src={
+    validationDocument
+      ? /^https?:\/\//i.test(validationDocument)
+        ? validationDocument
+        : `${BACKEND_URL}/${validationDocument.replace(/^\/+/, "")}`
+      : ""
+  }
+  alt="Uploaded ID"
+  style={{ width: "150px", borderRadius: "6px" }}
+/>
 
-
-    <img
-      src={`http://localhost:8080/${validationDocument}`}
-      alt="Uploaded ID"
-      style={{width:"150px", borderRadius:"6px"}}
-    />
-  
 
 </div>
 
@@ -1145,13 +1162,14 @@ Admin will review and approve your account.
   type="file"
   accept="image/png, image/jpg, image/jpeg"
   onChange={(e) => {
-  const file = e.target.files[0];
-  setGovtIdFile(file);
+  const file = e.target.files?.[0] || null;
 
-  if (file) {
-    const previewURL = URL.createObjectURL(file);
-    setPreview(previewURL);
+  if (preview) {
+    URL.revokeObjectURL(preview);
   }
+
+  setGovtIdFile(file);
+  setPreview(file ? URL.createObjectURL(file) : null);
 }}
 /> 
 </label>
@@ -1178,7 +1196,7 @@ Admin will review and approve your account.
 
 <button className="form-primary-action upload-action"
 onClick={uploadValidationDocument}
-disabled={!document}
+disabled={!govtIdFile}
 >
 Upload Document
 </button>

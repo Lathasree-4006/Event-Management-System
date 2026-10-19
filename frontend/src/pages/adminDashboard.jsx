@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { BACKEND_URL } from "../config";
 import { FaUser, FaCalendarAlt, FaCommentDots, FaUsers, FaHourglassHalf, FaSignOutAlt, FaGraduationCap, FaChartPie, FaSearch, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTimes } from "react-icons/fa";
 import {
   PieChart,
@@ -1129,7 +1130,7 @@ function AdminDashboard({ userData, setPage }) {
 
                       <td style={thTdStyle}>
                         <a
-                          href={`http://localhost:8080/${v.governmentIdUrl}`}
+                          href={`${BACKEND_URL}/${v.governmentIdUrl}`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -1198,7 +1199,7 @@ function AdminDashboard({ userData, setPage }) {
 
                       <td style={thTdStyle}>
                         <a
-                          href={`http://localhost:8080/${o.governmentIdUrl}`}
+                          href={`${BACKEND_URL}/${o.governmentIdUrl}`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
