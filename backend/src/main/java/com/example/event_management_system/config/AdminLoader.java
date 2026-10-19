@@ -17,9 +17,9 @@ public class AdminLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        String adminEmail = "lathasreediguvaputtur4006@gmail.com";
+        String adminEmail = System.getenv("ADMIN_EMAIL");
         if (adminRepository.findByEmail(adminEmail).isEmpty()) {
-            String rawPassword = "admin123";
+            String rawPassword = System.getenv("ADMIN_PASSWORD");
             String hashedPassword = new BCryptPasswordEncoder().encode(rawPassword);
             Admin admin = new Admin();
             admin.setEmail(adminEmail);

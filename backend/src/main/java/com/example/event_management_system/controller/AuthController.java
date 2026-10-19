@@ -213,8 +213,16 @@ public class AuthController {
     }
     private ResponseEntity<?> sendResetLink(String email, String role) {
         String token = UUID.randomUUID().toString();
-        String resetLink = "http://localhost:5173/ResetPassword/" + token;
+        // String resetLink = "http://localhost:5173/ResetPassword/" + token;
+        String frontendUrl = System.getenv("FRONTEND_URL");
 
+if (frontendUrl == null || frontendUrl.isBlank()) {
+    throw new IllegalStateException(
+        "FRONTEND_URL environment variable is not configured"
+    );
+}
+
+String resetLink = frontendUrl + "/ResetPassword/" + token;
         switch (role) {
             case "admin":
                 Admin admin = adminRepository.findByEmail(email).get();
