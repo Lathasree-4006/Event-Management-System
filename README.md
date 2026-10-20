@@ -6,8 +6,6 @@ The **Event Management and Engagement System** is a full-stack web application d
 
 It allows **admins, organizers, and volunteers** to interact efficiently through a centralized platform with features like event creation, participation tracking, notifications, and feedback.
 
----
-
 ## Tech Stack
 
 ### Frontend
@@ -138,10 +136,7 @@ https://event-management-system-1-pitx.onrender.com
 
 **D.Lathasree**
 
----
-
 ## Acknowledgment
 
 This project was developed as part of an internship to demonstrate full-stack development skills using modern technologies.
 
----
