@@ -106,14 +106,16 @@ MAIL_USERNAME=your_email
 MAIL_PASSWORD=your_email_app_password
 ```
 
----
-
-## Application Ports
+## Local Application Ports
 
 * Frontend → http://localhost:5173
 * Backend → http://localhost:8080
 
----
+
+## Website Link
+
+https://event-management-system-1-pitx.onrender.com
+
 
 ## ⚠️ Important Notes
 
